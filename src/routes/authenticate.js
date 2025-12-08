@@ -4,6 +4,7 @@ const bcrypt = require('bcryptjs');
 const {userValidator} = require('../schema/schema');
 const { insertSingleDocument, findDocuments} = require('../db/dbInteraction');
 const authenticateRouter = express.Router();
+const {createToken} = require('../auth/auth');
 
 
 // register a new user route
@@ -27,6 +28,34 @@ authenticateRouter.post('/register', userValidator, async (req, res) => {
     return res.status(500).json({ error: 'An internal error occurred, please try again later' });
   }
 });
+
+authenticateRouter.post("/login", userValidator, async (req, res) => {
+  const sendAuthError = () => res.status(401).json({ error: "Wrong authentication credentials" });
+  const sendServerError = (msg, err) => {
+    console.error(msg, err);
+    return res.status(500).json({ error: msg });
+  };
+
+  try {
+    const { email, password } = req.body;
+    const user = (await findDocuments("users", { email }))[0];
+    if (!user) return sendAuthError();
+
+    const valid = await bcrypt.compare(password, user.password);
+    if (!valid) return sendAuthError();
+
+    const payload = { email: user.email, id: user.id };
+    let token;
+    try {
+      token = await createToken(payload);
+    } catch (err) {
+      return sendServerError("Failed to generate authentication token.", err);
+    }
+    return res.status(200).json({ authToken: token });
+  } catch (err) {
+    return sendServerError("An internal error occurred, please try again later.", err);
+  }
+})
 
 
 module.exports = authenticateRouter;
