@@ -12,10 +12,6 @@ app.use("/user", authenticateRouter)
 app.use("/post", postRouter)
 
 
-app.get('/', function (req, res) {
-  res.status(200).send({"Message": "The Mingle is real!"});
-})
-
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
 })
