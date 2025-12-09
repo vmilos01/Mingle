@@ -15,6 +15,7 @@ const newPostSchema = Joi.object({
   topic: Joi.array().items(Joi.string().valid('Politics', 'Health', 'Sport', 'Tech')).min(1).max(4).required(),
   message: Joi.string().required(),
   owner: Joi.string().email().required(),
+  expirationTime: Joi.number().integer().min(60),
 }).required();
 
 // post interaction schema
@@ -31,7 +32,7 @@ const postInteractionSchema = Joi.object({
 // get post query schema
 const getPostSchema = Joi.object({
   topic: Joi.array().items(Joi.string().valid('Politics', 'Health', 'Sport', 'Tech')),
-  status: Joi.string().valid('Valid', 'Expired', 'all'),
+  status: Joi.string().valid('Live', 'Expired', 'all'),
   highestInterest: Joi.bool(),
 }).required();
 
@@ -55,10 +56,12 @@ function postCreationValidator(req, res, next) {
 
 function postQueryValidator(req, res, next) {
   // ensure topic is always an array if present
-  if (req.query.topic && !Array.isArray(req.query.topic)) {
-    req.query.topic = [req.query.topic];
+  let queryToValidate = { ...req.query };
+  if (queryToValidate.topic && !Array.isArray(queryToValidate.topic)) {
+    queryToValidate.topic = [queryToValidate.topic];
   }
-  const { error } = getPostSchema.validate(req.query);
+
+  const { error } = getPostSchema.validate(queryToValidate);
   if (error) return sendValidationError(res, error);
   next();
 }

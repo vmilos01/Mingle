@@ -1,5 +1,7 @@
 const express = require('express')
 const authenticateRouter = require('./routes/authenticate')
+const postRouter = require('./routes/post')
+
 require('dotenv').config()
 
 const port = process.env.PORT || 3000;
@@ -7,6 +9,7 @@ const port = process.env.PORT || 3000;
 const app = express()
 app.use(express.json());
 app.use("/user", authenticateRouter)
+app.use("/post", postRouter)
 
 
 app.get('/', function (req, res) {
